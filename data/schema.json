@@ -1,0 +1,134 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Ingredient Entry",
+    "type": "object",
+    "required": [
+        "id",
+        "name",
+        "tier",
+        "source_type"
+    ],
+    "properties": {
+        "id": {
+            "type": "string",
+            "description": "URL-safe slug, e.g. 'vitamin-b3'"
+        },
+        "name": {
+            "type": "string",
+            "description": "Primary Korean name"
+        },
+        "name_en": {
+            "type": "string",
+            "description": "English name"
+        },
+        "aliases": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Alternative names (Korean + English)"
+        },
+        "nickname": {
+            "type": "string",
+            "description": "One-line consumer-friendly descriptor"
+        },
+        "tier": {
+            "type": "integer",
+            "enum": [
+                1,
+                2,
+                3
+            ],
+            "description": "1=Full, 2=Standard, 3=Brief"
+        },
+        "source_type": {
+            "type": "string",
+            "enum": [
+                "고시형",
+                "개별인정형",
+                "부원료",
+                "식품첨가물"
+            ],
+            "description": "Regulatory classification"
+        },
+        "category": {
+            "type": "string",
+            "enum": [
+                "vitamin",
+                "mineral",
+                "amino_acid",
+                "fatty_acid",
+                "probiotic",
+                "extract",
+                "enzyme",
+                "protein",
+                "fiber",
+                "other_functional",
+                "additive"
+            ]
+        },
+        "subcategory": {
+            "type": "string",
+            "description": "e.g. 'b-complex', 'omega', 'lactic_acid_bacteria'"
+        },
+        "tags_purpose": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Consumer-intent tags (다이어트, 탈모 방지, etc.)"
+        },
+        "tags_function": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "MFDS-based function tags"
+        },
+        "tags_bodypart": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Body part tags (뇌, 눈, 간, 장, etc.)"
+        },
+        "tags_type": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Chemical/form type tags"
+        },
+        "tags_age": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Age relevance"
+        },
+        "tags_gender": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "Gender relevance"
+        },
+        "daily_recommended": {
+            "type": "string"
+        },
+        "upper_limit": {
+            "type": "string"
+        },
+        "mfds_functionality": {
+            "type": "string",
+            "description": "Official MFDS-approved functionality statement"
+        },
+        "related_ingredients": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "IDs of synergistic/related ingredients"
+        }
+    }
+}
