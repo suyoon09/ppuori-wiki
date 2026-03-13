@@ -3,3 +3,6 @@ node_modules/
 .DS_Store
 out/
 *.tsbuildinfo
+
+# Local Netlify folder
+.netlify

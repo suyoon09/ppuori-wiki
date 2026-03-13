@@ -1,14 +1,16 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import StampLogo from '@/components/StampLogo';
+import Nav from '@/components/Nav';
 import {
     getPurposeTag,
     getIngredientsByPurpose,
     getIngredient,
+    getAllPurposeKeys,
 } from '@/lib/data';
+
+// Generate all purpose pages at build time
+export function generateStaticParams() {
+    return getAllPurposeKeys().map((slug) => ({ slug }));
+}
 
 const ORIGIN_COLORS: Record<string, string> = {
     '한방': '#B85C3A', '과학': '#5B7B8F', '식품': '#7B9E6B',
@@ -20,18 +22,20 @@ const EVIDENCE_MAP: Record<string, number> = {
     '매우 양호': 4, '양호': 3, '보통': 2, '제한적': 1,
 };
 
-export default function PurposePage() {
-    const params = useParams();
-    const slug = decodeURIComponent(params.slug as string);
+export default async function PurposePage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug: rawSlug } = await params;
+    const slug = decodeURIComponent(rawSlug);
     const tag = getPurposeTag(slug);
-    const [menuOpen, setMenuOpen] = useState(false);
 
     if (!tag) {
         return (
-            <div className="container detail-page" style={{ textAlign: 'center', paddingTop: '120px' }}>
-                <h1 style={{ fontWeight: 300, marginBottom: 16 }}>목적을 찾을 수 없습니다</h1>
-                <Link href="/" style={{ color: '#666', borderBottom: '1px solid #ccc' }}>홈으로 돌아가기</Link>
-            </div>
+            <>
+                <Nav />
+                <div className="container detail-page" style={{ textAlign: 'center', paddingTop: '120px' }}>
+                    <h1 style={{ fontWeight: 300, marginBottom: 16 }}>목적을 찾을 수 없습니다</h1>
+                    <Link href="/" style={{ color: '#666', borderBottom: '1px solid #ccc' }}>홈으로 돌아가기</Link>
+                </div>
+            </>
         );
     }
 
@@ -40,24 +44,7 @@ export default function PurposePage() {
 
     return (
         <>
-            {/* Mobile menu */}
-            <div className={`mobile-menu ${menuOpen ? 'open' : ''}`}>
-                <button className="mobile-menu-close" onClick={() => setMenuOpen(false)}>×</button>
-                <Link href="/" onClick={() => setMenuOpen(false)}>홈</Link>
-                <Link href="/about" onClick={() => setMenuOpen(false)}>소개</Link>
-            </div>
-
-            {/* Nav */}
-            <nav className="nav">
-                <div className="nav-inner">
-                    <Link href="/" style={{ display: 'block' }}>
-                        <StampLogo size={28} />
-                    </Link>
-                    <button className="nav-hamburger" aria-label="메뉴" onClick={() => setMenuOpen(true)}>
-                        <span /><span /><span />
-                    </button>
-                </div>
-            </nav>
+            <Nav />
 
             <div className="container-wide">
                 <div className="purpose-header">
@@ -68,7 +55,7 @@ export default function PurposePage() {
                     <p className="purpose-desc">{tag.description} — {tag.count}종</p>
                 </div>
 
-                {/* Ingredient list — editorial, no cards */}
+                {/* Ingredient list */}
                 {ingredients.map((item) => (
                     <Link key={item.id} href={`/ingredients/${item.id}`} className="ingredient-list-item">
                         <div className="item-header">

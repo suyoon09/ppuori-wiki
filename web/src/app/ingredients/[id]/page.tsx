@@ -1,11 +1,11 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import StampLogo from '@/components/StampLogo';
 import Nav from '@/components/Nav';
-import { getIngredient, getCategoryDisplay } from '@/lib/data';
+import { getIngredient, getCategoryDisplay, getAllIngredientIds } from '@/lib/data';
+
+// Generate all ingredient pages at build time
+export function generateStaticParams() {
+    return getAllIngredientIds().map((id) => ({ id }));
+}
 
 const ORIGIN_COLORS: Record<string, string> = {
     '한방': '#B85C3A', '과학': '#5B7B8F', '식품': '#7B9E6B',
@@ -22,7 +22,6 @@ function Paragraphs({ text }: { text: string }) {
 
 /** Parse food_sources text into a mini table if it contains parenthetical amounts */
 function FoodSourcesTable({ text }: { text: string }) {
-    // Try to extract items like "식품명(100g당 ~XX mg)"
     const regex = /([^,，]+?)\s*\(([^)]+)\)/g;
     const entries: { name: string; amount: string }[] = [];
     let match;
@@ -31,16 +30,12 @@ function FoodSourcesTable({ text }: { text: string }) {
     }
 
     if (entries.length >= 3) {
-        // Get any trailing text after the last parenthetical
         const lastIdx = text.lastIndexOf(')');
         const trailing = lastIdx !== -1 ? text.slice(lastIdx + 1).replace(/^[,，.\s]+/, '').trim() : '';
-
         return (
             <>
                 <table className="info-table food-sources-table">
-                    <thead>
-                        <tr><th>식품</th><th>함량</th></tr>
-                    </thead>
+                    <thead><tr><th>식품</th><th>함량</th></tr></thead>
                     <tbody>
                         {entries.map((e, i) => (
                             <tr key={i}><td>{e.name}</td><td>{e.amount}</td></tr>
@@ -51,25 +46,19 @@ function FoodSourcesTable({ text }: { text: string }) {
             </>
         );
     }
-
-    // Fallback to paragraphs
     return <Paragraphs text={text} />;
 }
 
-/** Render food_sources_table array as a proper table */
 function FoodSourcesSection({ item }: { item: any }) {
     const table = item.food_sources_table;
     const text = item.food_sources;
 
     if (table && table.length > 0) {
-        // Show table-only; skip the old text field (it duplicates the table data)
         return (
             <section className="detail-section">
                 <h2>어디서 찾을 수 있나요</h2>
                 <table className="info-table food-sources-table">
-                    <thead>
-                        <tr><th>식품</th><th>함량 (1회 기준)</th></tr>
-                    </thead>
+                    <thead><tr><th>식품</th><th>함량 (1회 기준)</th></tr></thead>
                     <tbody>
                         {table.map((row: { food: string; amount: string }, i: number) => (
                             <tr key={i}><td>{row.food}</td><td>{row.amount}</td></tr>
@@ -80,7 +69,6 @@ function FoodSourcesSection({ item }: { item: any }) {
         );
     }
 
-    // Fallback: text-only (for additives, some extracts, etc.)
     if (text) {
         return (
             <section className="detail-section">
@@ -89,22 +77,22 @@ function FoodSourcesSection({ item }: { item: any }) {
             </section>
         );
     }
-
     return null;
 }
 
-export default function IngredientPage() {
-    const params = useParams();
-    const id = params.id as string;
+export default async function IngredientPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const item = getIngredient(id);
-
 
     if (!item) {
         return (
-            <div className="container detail-page" style={{ textAlign: 'center', paddingTop: '120px' }}>
-                <h1 style={{ fontWeight: 300, marginBottom: 16 }}>원료를 찾을 수 없습니다</h1>
-                <Link href="/" style={{ color: '#666', borderBottom: '1px solid #ccc' }}>홈으로 돌아가기</Link>
-            </div>
+            <>
+                <Nav />
+                <div className="container detail-page" style={{ textAlign: 'center', paddingTop: '120px' }}>
+                    <h1 style={{ fontWeight: 300, marginBottom: 16 }}>원료를 찾을 수 없습니다</h1>
+                    <Link href="/" style={{ color: '#666', borderBottom: '1px solid #ccc' }}>홈으로 돌아가기</Link>
+                </div>
+            </>
         );
     }
 
@@ -114,7 +102,6 @@ export default function IngredientPage() {
     return (
         <>
             <Nav />
-
             <div className="container detail-page">
                 {/* Breadcrumb */}
                 <div className="detail-breadcrumb">
@@ -163,15 +150,15 @@ export default function IngredientPage() {
                     </table>
                 </section>
 
-                {/* Description — multi-paragraph */}
+                {/* Description */}
                 {(item.content_description || item.content_brief) && (
                     <section className="detail-section">
                         <h2>이 원료는 뭔가요</h2>
-                        <Paragraphs text={item.content_description || item.content_brief} />
+                        <Paragraphs text={item.content_description || item.content_brief || ''} />
                     </section>
                 )}
 
-                {/* Origin story — multi-paragraph */}
+                {/* Origin story */}
                 {item.origin_story && (
                     <section className="detail-section">
                         <h2>뿌리 — 기원 이야기</h2>
@@ -189,10 +176,10 @@ export default function IngredientPage() {
                     </section>
                 )}
 
-                {/* Food Sources — TABLE */}
+                {/* Food Sources */}
                 <FoodSourcesSection item={item} />
 
-                {/* Fun fact — multi-paragraph */}
+                {/* Fun fact */}
                 {item.fun_fact && (
                     <section className="detail-section">
                         <h2>흥미로운 이야기</h2>
@@ -202,7 +189,7 @@ export default function IngredientPage() {
                     </section>
                 )}
 
-                {/* Safety — multi-paragraph */}
+                {/* Safety */}
                 {item.safety_class && (
                     <section className="detail-section">
                         <h2>안전성</h2>
